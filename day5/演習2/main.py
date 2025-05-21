@@ -11,6 +11,7 @@ import pickle
 import time
 import great_expectations as gx
 
+
 class DataLoader:
     """データロードを行うクラス"""
 
@@ -246,6 +247,30 @@ def test_model_performance():
     assert (
         metrics["inference_time"] < 1.0
     ), f"推論時間が長すぎます: {metrics['inference_time']}秒"
+
+
+def test_inference_speed_and_accuracy():
+    """推論時間と精度をチェックするテスト"""
+    # データ準備
+    data = DataLoader.load_titanic_data()
+    X, y = DataLoader.preprocess_titanic_data(data)
+    # テスト用にデータを分割
+    _, X_test, _, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
+
+    # 保存済みモデルの読み込み
+    model = ModelTester.load_model()
+
+    # 推論時間を計測
+    start_time = time.time()
+    y_pred = model.predict(X_test)
+    inference_time = time.time() - start_time
+
+    # 精度を算出
+    accuracy = accuracy_score(y_test, y_pred)
+
+    # ベースラインとの比較
+    assert accuracy >= 0.75, f"精度が閾値を下回っています: {accuracy:.4f}"
+    assert inference_time < 1.0, f"推論時間が長すぎます: {inference_time:.4f}秒"
 
 
 if __name__ == "__main__":
